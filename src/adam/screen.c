@@ -349,11 +349,7 @@ void screen_select_file_next(void)
   gotoxy(0,18); cprintf("%32s","[...]");
 }
 
-<<<<<<< HEAD
-void screen_select_file_display_entry(unsigned char y, char* e, char entryType)
-=======
 void screen_select_file_display_entry(unsigned char y, char* e, unsigned entryType)
->>>>>>> feature-support-link-format
 {
   gotoxy(0,y+3);
   msx_color(15,5,7);

@@ -151,7 +151,7 @@ unsigned char select_file_display(void)
     {
       entry_size[i] = strlen(e+1);
       visibleEntries++; // could filter on e[0] to deal with message entries like on FUJINET.PL
-      screen_select_file_display_entry(i, e+2, e[0]*16 + e[1]);
+      screen_select_file_display_entry(i, e, 0);
     }
   }
 
@@ -292,13 +292,21 @@ void select_file_link(void)
       state = HOSTS_AND_DEVICES;
       return;
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1bd24d1 (Merge branch 'main' of github.com:FujiNetWIFI/fujinet-config-adam)
   io_set_directory_position(pos);
 
   e = io_read_directory(128, 0x20);
 
+<<<<<<< HEAD
   // old-style links have a '+' prefix
   if (e[0] == '+') strcpy(tnfsHostname, &e[1]);
   else strcpy(tnfsHostname, e);
+=======
+  strcpy(tnfsHostname, &e[1]);
+>>>>>>> 1bd24d1 (Merge branch 'main' of github.com:FujiNetWIFI/fujinet-config-adam)
 
   io_close_directory();
 
@@ -368,11 +376,14 @@ void select_file_devance(void)
 }
 
 unsigned select_file_entry_type(void)
+<<<<<<< HEAD
 {
     return select_file_type();
 }
 
 unsigned select_file_type(void)
+=======
+>>>>>>> 1bd24d1 (Merge branch 'main' of github.com:FujiNetWIFI/fujinet-config-adam)
 {
   char *e;
   unsigned result;
@@ -383,8 +394,14 @@ unsigned select_file_type(void)
 
   io_set_directory_position(pos);
 
+<<<<<<< HEAD
   e = io_read_directory(16, 0x40); // 0x40 -> get type info
   result = e[0]*16 + e[1];
+=======
+  if (strrchr(e, '/') != NULL) result = ENTRY_TYPE_FOLDER;
+  else if (e[0] == '+') result = ENTRY_TYPE_LINK;
+  else result = ENTRY_TYPE_FILE;
+>>>>>>> 1bd24d1 (Merge branch 'main' of github.com:FujiNetWIFI/fujinet-config-adam)
 
   io_close_directory();
 
