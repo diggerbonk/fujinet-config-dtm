@@ -14,23 +14,8 @@ void mount_and_boot_lobby(void)
     screen_clear();
     cputsxy(3, 0, "Booting Lobby");
 
-
-//    if ( !io_mount_all() )
-//    {
-//        screen_error("ERROR MOUNTING ALL");
-//        wait_a_moment();
-//        state = HOSTS_AND_DEVICES;
-//    }
-//    else
-    {
-        while (!kbhit())
-        {
-        }
-        cgetc();
-
-        io_set_boot_mode(2);
-        cold_start();
-    }
+    io_set_boot_mode(2);
+    cold_start();
 }
 
 void mount_and_boot(void)
@@ -54,7 +39,7 @@ void mount_and_boot(void)
     screen_clear();
     cputsxy(3, 0, "MOUNT AND BOOT");
 
-    cputsxy(5, 0, "Mounting all Host and Device Slots");
+    cputsxy(0, 3, "Mounting all Host and Device Slots");
 
     if ( !io_mount_all() )
     {
