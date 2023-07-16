@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <conio.h>
 #include <stdint.h>
 #include <peekpoke.h>
@@ -172,15 +171,21 @@ void screen_print_ip(unsigned char x, unsigned char y, unsigned char *buf)
 /**
  * Convert hex to a string and print as a MAC address at position x, y
  */
-/**
- * Convert hex to a string and print as a MAC address at position x, y
- */
 void screen_print_mac(unsigned char x, unsigned char y, unsigned char *buf)
 {
-  unsigned char mactmp[18];
+  unsigned char tmp[3];
+  unsigned char i = 0;
 
-  sprintf(mactmp, "%02X:%02X:%02X:%02X:%02X:%02X", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
-  cputsxy(x, y, mactmp);
+  gotoxy(x, y);
+
+  for (i = 0; i < 6; i++)
+  {
+      itoa_hex(buf[i], tmp);
+      cputs(tmp);
+      if (i == 5) 
+        break;
+      cputs(":");
+  }
 }
 
 /**
@@ -201,7 +206,6 @@ void itoa_hex(unsigned char val, char *buf)
  */
 void screen_show_info(int printerEnabled, AdapterConfig *ac)
 {
-  unsigned char i;
   screen_clear();
   bar_clear(false);
 
@@ -233,10 +237,6 @@ void screen_show_info(int printerEnabled, AdapterConfig *ac)
 
 void screen_select_slot(char *e)
 {
-  unsigned int *s;
-  unsigned char d[40];
-
-
   screen_clear();
 
   cputsxy(0, 22,
@@ -248,8 +248,10 @@ void screen_select_slot(char *e)
   if ( create == false )
   {
     // Modified time 
-    sprintf(d, "%8s %04u-%02u-%02u %02u:%02u:%02u", "MTIME:", (*e++) + 1970, *e++, *e++, *e++, *e++, *e++);
-    cputsxy(0, DEVICES_END_MOUNT_Y + 5, d);
+    // sprintf(d, "%8s %04u-%02u-%02u %02u:%02u:%02u", "MTIME:", (*e++) + 1970, *e++, *e++, *e++, *e++, *e++);
+
+    // Remove for now (wasn't in original config, not really all that important and removng sprintf usage), so skip over the 6 bytes for the file date/time info.
+    e += 6;
 
     // File size
     // only 2 bytes, so max size is 65535.. don't show for now until SIO method is changed to return more.
@@ -467,7 +469,6 @@ void screen_hosts_and_devices(HostSlot *h, DeviceSlot *d, unsigned char *e)
 {
   unsigned char retry = 5;
   unsigned char i;
-  char temp[10];
 
 
   screen_clear();
