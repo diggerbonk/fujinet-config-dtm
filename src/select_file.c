@@ -466,6 +466,7 @@ void select_file(void)
     // Return to the previous dir
     sf_subState = SF_DISPLAY;
     backToFiles = false;
+    pos = 0;
   }
   else if (backFromCopy)
   {
