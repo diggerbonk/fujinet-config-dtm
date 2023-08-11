@@ -467,10 +467,6 @@ void screen_error(const char *msg)
 
 void screen_hosts_and_devices(HostSlot *h, DeviceSlot *d, unsigned char *e)
 {
-  unsigned char retry = 5;
-  unsigned char i;
-
-
   screen_clear();
   bar_clear(false);
 
@@ -479,48 +475,7 @@ void screen_hosts_and_devices(HostSlot *h, DeviceSlot *d, unsigned char *e)
   cputsxy(0, 11, HORIZONTAL_LINE);
   cputsxy(26, 11, " DRIVE SLOTS ");
 
-  while (retry > 0)
-  {
-    io_get_host_slots(&hostSlots[0]);
-
-    if (io_error())
-      retry--;
-    else
-      break;
-  }
-
-  if (io_error())
-  {
-    screen_error("ERROR READING HOST SLOTS");
-    while (!kbhit())
-    {
-    }
-    cold_start();
-  }
-
-  retry = 5;
-
   screen_hosts_and_devices_host_slots(&hostSlots[0]);
-
-  while (retry > 0)
-  {
-    io_get_device_slots(&deviceSlots[0]);
-
-    if (io_error())
-      retry--;
-    else
-      break;
-  }
-
-  if (io_error())
-  {
-    screen_error("ERROR READING DEVICE SLOTS");
-    // die();
-    while (!kbhit())
-    {
-    }
-    cold_start();
-  }
 
   screen_hosts_and_devices_device_slots(DEVICES_START_Y, &deviceSlots[0], "");
 }
