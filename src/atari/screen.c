@@ -73,7 +73,7 @@ void screen_mount_and_boot()
   bar_clear(false);
 }
 
-void screen_set_wifi(AdapterConfig *ac)
+void screen_set_wifi(AdapterConfigExtended *ac)
 {
   char mactmp[3];
   unsigned char i = 0;
@@ -152,59 +152,10 @@ void screen_set_wifi_password(void)
   cputsxy(3, 22, "   ENTER PASSWORD");
 }
 
-void screen_print_ip(unsigned char x, unsigned char y, unsigned char *buf)
-{
-  unsigned char i = 0;
-  unsigned char tmp[4];
-
-  gotoxy(x, y);
-  for (i = 0; i < 4; i++)
-  {
-    itoa(buf[i], tmp, 10);
-    cputs(tmp);
-    if (i == 3)
-      break;
-    cputs(".");
-  }
-}
-
-/**
- * Convert hex to a string and print as a MAC address at position x, y
- */
-void screen_print_mac(unsigned char x, unsigned char y, unsigned char *buf)
-{
-  unsigned char tmp[3];
-  unsigned char i = 0;
-
-  gotoxy(x, y);
-
-  for (i = 0; i < 6; i++)
-  {
-      itoa_hex(buf[i], tmp);
-      cputs(tmp);
-      if (i == 5) 
-        break;
-      cputs(":");
-  }
-}
-
-/**
- * Convert hex to a string.  Special hex output of numbers under 16, e.g. 9 -> 09, 10 -> 0A
- */
-void itoa_hex(unsigned char val, char *buf)
-{
-
-  if (val < 16)
-  {
-    *(buf++) = '0';
-  }
-  itoa(val, buf, 16);
-}
-
 /*
  * Display the 'info' screen
  */
-void screen_show_info(int printerEnabled, AdapterConfig *ac)
+void screen_show_info(int printerEnabled, AdapterConfigExtended *ac)
 {
   screen_clear();
   bar_clear(false);
@@ -226,12 +177,12 @@ void screen_show_info(int printerEnabled, AdapterConfig *ac)
 
   cputsxy(17, 7, ac->ssid);
   cputsxy(17, 8, ac->hostname);
-  screen_print_ip(17, 9, ac->localIP);
-  screen_print_ip(17, 10, ac->gateway);
-  screen_print_ip(17, 11, ac->dnsIP);
-  screen_print_ip(17, 12, ac->netmask);
-  screen_print_mac(17, 13, ac->macAddress);
-  screen_print_mac(17, 14, ac->bssid);
+  cputsxy(17, 9, ac->localIP);
+  cputsxy(17, 10, ac->gateway);
+  cputsxy(17, 11, ac->dnsIP);
+  cputsxy(17, 12, ac->netmask);
+  cputsxy(17, 13, ac->macAddress);
+  cputsxy(17, 14, ac->bssid);
   cputsxy(17, 15, ac->fn_version);
 }
 
