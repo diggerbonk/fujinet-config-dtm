@@ -20,7 +20,6 @@
 #include "bar.h"
 #include "input.h"
 
-//unsigned char *video_ptr;  // a pointer to the memory address containing the screen contents
 unsigned char *cursor_ptr; // a pointer to the current cursor position on the screen
 char _visibleEntries;
 extern bool copy_mode;
