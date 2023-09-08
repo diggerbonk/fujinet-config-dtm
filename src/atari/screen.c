@@ -513,8 +513,7 @@ void screen_hosts_and_devices_devices_clear_all(void)
 
 void screen_hosts_and_devices_clear_host_slot(unsigned char i)
 {
-  // i comes in as the place in the array for this host slot. To get the corresponding position on the screen, add HOSTS_START_Y
-  screen_clear_line(i + HOSTS_START_Y);
+  // nothing to do, edit_line handles clearing correct space on screen, and doesn't touch the list numbers
 }
 
 void screen_hosts_and_devices_edit_host_slot(unsigned char i)
