@@ -185,7 +185,7 @@ void screen_select_slot(char *e)
   // Show file details if it's an existing file only.
   if ( create == false )
   {
-    // Modified time 
+    // Modified time
     // sprintf(d, "%8s %04u-%02u-%02u %02u:%02u:%02u", "MTIME:", (*e++) + 1970, *e++, *e++, *e++, *e++, *e++);
 
     // Remove for now (wasn't in original config, not really all that important and removng sprintf usage), so skip over the 6 bytes for the file date/time info.
@@ -533,7 +533,7 @@ void screen_hosts_and_devices_eject(unsigned char ds)
 
   tmp[0] = ds + '1';
 
-  if ( mounting ) 
+  if ( mounting )
   {
     y = DEVICES_START_MOUNT_Y;
   }
