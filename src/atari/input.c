@@ -749,7 +749,7 @@ void set_device_slot_mode(unsigned char slot, unsigned char mode)
   // If we couldn't mount read/write, then re-mount again as read-only
   /*
   in original config, this repeated same log (using same mode..)
-  if ( io_error() )  
+  if ( io_error() )
   {
     io_umount_disk_image(slot);
 
