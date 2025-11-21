@@ -398,7 +398,7 @@ void screen_select_file_new_size(unsigned char k)
 	screen_print_menu("3", "2MB  ");
 }
 
-void screen_select_file_new_custom(void)
+void screen_select_file_display_entry(unsigned char y, char* e, unsigned entryType)
 {
 	cclearxy(0, STATUS_BAR, 120);
 	gotoxy(0, STATUS_BAR);

@@ -114,6 +114,7 @@ unsigned char entry_size[ENTRIES_PER_PAGE];
 unsigned short entry_timer = ENTRY_TIMER_DUR;
 bool long_entry_displayed = false;
 bool copy_mode = false;
+unsigned char selected_file_type = 0;
 
 extern unsigned char copy_host_slot;
 extern bool backToFiles;
@@ -184,7 +185,7 @@ unsigned char select_file_display(void)
 
   for (i = 0; i < ENTRIES_PER_PAGE; i++)
   {
-    e = io_read_directory(DIR_MAX_LEN, 0);
+    e = io_read_directory(DIR_MAX_LEN, 0x40);
 #ifdef BUILD_ADAM
 #define FUDGE_OFFSET 2
 #else
@@ -197,14 +198,15 @@ unsigned char select_file_display(void)
     }
     else
     {
-      entry_size[i] = (unsigned char)strlen(e);
+      entry_size[i] = (unsigned char)strlen(e+1);
       visibleEntries++; // could filter on e[0] to deal with message entries like on FUJINET.PL
-      screen_select_file_display_entry(i, e, 0);
+      screen_select_file_display_entry(i, e+1, e[0]);
+
     }
   }
 
   // Do one more read to check EOF
-  e = io_read_directory(DIR_MAX_LEN, 0);
+  e = io_read_directory(DIR_MAX_LEN, 0x40);
   if (e[1] == 0x7F) // was e[2]
     dir_eof = true;
 
@@ -296,7 +298,28 @@ void select_file_choose(char visibleEntries)
   while (sf_subState == SF_CHOOSE)
   {
     sf_subState = input_select_file_choose();
-    select_display_long_filename();
+    // below added because i don't want it in per-platform 
+    // code.
+    if (sf_subState == SF_SELECTED) {
+      pos += (bar_get() - FILES_START_Y );
+      selected_file_type = select_file_entry_type();
+      if (selected_file_type == 0) 
+      {
+        sf_subState = SF_CHOOSE;
+        pos -= (bar_get() - FILES_START_Y);
+      }
+      else 
+      {
+        //select_display_long_filename();
+        if (selected_file_type == 1) sf_subState = SF_ADVANCE_FOLDER;
+        else 
+        {
+          strncpy(source_path, path, 224);
+          old_pos = pos;
+          sf_subState = SF_DONE;
+        }
+      }
+    }
   }
 }
 
@@ -379,20 +402,25 @@ void select_file_devance(void)
   sf_subState = SF_DISPLAY; // And display the result.
 }
 
+unsigned char select_file_is_folder(void)
+{
+  unsigned char result = select_file_entry_type();
+  if (result == 1) return true;
+  else return false;
+}
+
 unsigned select_file_entry_type(void)
 {
-  const char *e;
+  char *e;
   unsigned result;
-
   io_open_directory(selected_host_slot, path, filter);
 
   io_set_directory_position(pos);
 
-  e = io_read_directory(128, 0);
+  //e = io_read_directory(128, 0);
 
-  if (strrchr(e, '/') != NULL) result = ENTRY_TYPE_FOLDER;
-  else if (e[0] == '+') result = ENTRY_TYPE_LINK;
-  else result = ENTRY_TYPE_FILE;
+  e = io_read_directory(16, 0x40); // 0x40 -> get type info
+  result = e[0];
 
   io_close_directory();
 

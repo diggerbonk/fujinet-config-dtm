@@ -495,20 +495,7 @@ SFSubState input_select_file_choose(void)
     return SF_CHOOSE;
   case KCODE_RETURN:
   case '*': // took from fujinet-config
-    pos += bar_get() - FILES_START_Y;
-    screen_select_file_clear_long_filename();
-    entryType = select_file_entry_type();
-
-    if (entryType == ENTRY_TYPE_FOLDER)
-      return SF_ADVANCE_FOLDER;
-    else if (entryType == ENTRY_TYPE_LINK)
-      return SF_LINK;
-    else
-    {
-      strncpy(source_path, path, 224);
-      old_pos = pos;
-      return SF_DONE;
-    }
+    return SF_SELECTED;
   case KCODE_BACKSP:
     return SF_DEVANCE_FOLDER;
 
