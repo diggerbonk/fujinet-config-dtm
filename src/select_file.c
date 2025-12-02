@@ -152,6 +152,7 @@ unsigned char select_file_display(void)
       entry_size[i] = strlen(e+1);
       visibleEntries++; // could filter on e[0] to deal with message entries like on FUJINET.PL
       screen_select_file_display_entry(i, e+2, e[0]*16 + e[1]);
+      //screen_select_file_display_entry(i, e, 0);
     }
   }
 
