@@ -13,7 +13,7 @@
 #define NUM_DEVICE_SLOTS    8
 
 // # of files to display on the page. Moved from select_file.c to here, for Atari.
-#define ENTRIES_PER_PAGE 18
+#define ENTRIES_PER_PAGE 20
 
 #define COLOR_BACKGROUND 0x00
 #define COLOR_BORDER 0x00

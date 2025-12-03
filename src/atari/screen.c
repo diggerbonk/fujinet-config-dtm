@@ -306,26 +306,32 @@ void screen_select_file(void)
   bar_clear(false);
 
   cputsxy(0, 2, HORIZONTAL_LINE);
-  cputsxy(0, 21, HORIZONTAL_LINE);
+  //cputsxy(0, 21, HORIZONTAL_LINE);
 
-  cputsxy(28, 22, CH_KEY_NAV);
-  cputsxy(28, 23, "|Move");
+cputsxy(0, 23, HORIZONTAL_LINE);
+cputsxy(30,23,"\x7DMenu");
 
-  cputsxy(33, 22, "|" CH_KEY_RETURN);
-  cputsxy(33, 23, "|Select");
+  //cputsxy(28, 22, CH_KEY_NAV);
+  //cputsxy(28, 23, "|Move");
+
+  //cputsxy(33, 22, "|" CH_KEY_RETURN);
+  //cputsxy(33, 23, "|Select");
 
   if (copy_mode == false)
   {
-    cputsxy(0, 22, CH_INV_F "ilter:");
-    cputsxy(0, 23,
-        CH_KEY_C "opy " CH_INV_N "ew " CH_KEY_OPTION " Boot " CH_KEY_ESC " Back");
+    //cputsxy(0, 22, CH_INV_F "ilter:");
+    //cputsxy(0, 23,
+    //    CH_KEY_C "opy " CH_INV_N "ew " CH_KEY_OPTION " Boot " CH_KEY_ESC " Back");
   }
   else
   {
-    cputsxy(0, 22, CH_KEY_C "Complete Copy");
-    cputsxy(0, 23,
-      CH_INV_C "opy " CH_INV_N "ew " CH_KEY_RETURN "Choose " CH_KEY_OPTION "Boot " CH_KEY_ESC "ape");
+    //cputsxy(0, 22, CH_KEY_C "Complete Copy");
+    //cputsxy(0, 23,
+    //  CH_INV_C "opy " CH_INV_N "ew " CH_KEY_RETURN "Choose " CH_KEY_OPTION "Boot " CH_KEY_ESC "ape");
   }
+
+      cputsxy(35,2,"Pg\x7F"); // next page
+
 }
 
 void screen_select_file_display(char *p, char *f)
@@ -392,15 +398,15 @@ void screen_select_file_display_entry(unsigned char y, char *e, unsigned entryTy
 {
   if (entryType > 0)
   {
-    if (entryType == 1) cputsxy(0,FILES_START_Y+y,"/");
-    else if (entryType == 2) cputsxy(0,FILES_START_Y+y,"-");
-    else if (entryType == 3) cputsxy(0,FILES_START_Y+y,">");
-    else cputsxy(0,FILES_START_Y+y," ");
-    cputsxy(1, FILES_START_Y + y, e);
+    if (entryType == 1) cputsxy(0,FILES_START_Y+y," /");
+    else if (entryType == 2) cputsxy(0,FILES_START_Y+y," *");
+    else if (entryType == 3) cputsxy(0,FILES_START_Y+y," >");
+    else cputsxy(0,FILES_START_Y+y,"  ");
+    cputsxy(2, FILES_START_Y + y, e);
   }
   else 
   {
-    cputsxy(1, FILES_START_Y + y, e);
+    cputsxy(0, FILES_START_Y + y, e);
   }
 }
 
