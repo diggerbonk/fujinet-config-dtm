@@ -12,14 +12,15 @@
 #include "../fuji_typedefs.h"
 
 void screen_init(void);
-void screen_error(const char *s);
+void screen_error(const char *c);
 
 void screen_putlcc(char c);
-void screen_put_inverse(char c);
+void screen_put_inverse(const char c);
 void screen_print_inverse(const char *s);
 void screen_print_menu(const char *si, const char *sc);
+void screen_fujinetlogo(void);
 
-void screen_set_wifi(AdapterConfigExtended* acx);
+void screen_set_wifi(AdapterConfig* ac);
 void screen_set_wifi_display_ssid(char n, SSIDInfo *s);
 void screen_set_wifi_select_network(unsigned char nn);
 void screen_set_wifi_custom(void);
@@ -35,7 +36,6 @@ void screen_hosts_and_devices(HostSlot *h, DeviceSlot *d, bool *e);
 void screen_hosts_and_devices_hosts(void);
 void screen_hosts_and_devices_host_slots(HostSlot *h);
 void screen_hosts_and_devices_devices(void);
-void screen_hosts_and_devices_devices_selected(char selected_slot);
 void screen_hosts_and_devices_device_slots(unsigned char y, DeviceSlot *d, bool *e);
 
 void screen_hosts_and_devices_clear_host_slot(unsigned char i);
@@ -46,7 +46,7 @@ void screen_hosts_and_devices_host_slot_empty(unsigned char hs);
 
 void screen_perform_copy(char *sh, char *p, char *dh, char *dp);
 
-void screen_show_info(bool printerEnabled, AdapterConfigExtended* acx);
+void screen_show_info(bool printerEnabled, AdapterConfig* ac);
 
 void screen_select_file(void);
 void screen_select_file_display(char *p, char *f);
@@ -69,7 +69,5 @@ void screen_select_slot(char *e);
 void screen_select_slot_choose(void);
 void screen_select_slot_mode(void);
 void screen_select_slot_eject(unsigned char ds);
-
-bool screen_mount_and_boot_lobby(void);
 #endif /* SCREEN_H */
 #endif /* BUILD_APPLE2 */

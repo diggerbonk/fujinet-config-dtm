@@ -8,11 +8,13 @@
 #define SELECT_FILE_H
 
 #define ENTRY_TIMER_DUR 128
+#define LONG_FILENAME 40
 
 void select_file(void);
 void select_display_long_filename(void);
 void select_file_set_source_filename(void);
 unsigned char select_file_is_folder(void);
+unsigned select_file_type(void);
 unsigned select_file_entry_type(void);
 
 #endif /* SELECT_FILE */

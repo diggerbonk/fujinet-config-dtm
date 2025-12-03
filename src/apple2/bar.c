@@ -3,11 +3,8 @@
  * Bar routines
  */
 
-#ifdef __ORCAC__
-#include <coniogs.h>
-#else
+#include <peekpoke.h>
 #include <conio.h>
-#endif
 #include "bar.h"
 
 /**

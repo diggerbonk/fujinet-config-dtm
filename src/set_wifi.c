@@ -4,17 +4,9 @@
  * Set new WiFi connection
  */
 
-#ifdef _CMOC_VERSION_
-#include <cmoc.h>
-#include "coco/io.h"
-#include "coco/screen.h"
-#include "coco/bar.h"
-#include "coco/input.h"
-#include "coco/globals.h"
-#else
 #include <string.h>
-#endif /* _CMOC_VERSION_ */
-
+#include <conio.h>
+#include <stdio.h>
 #include "set_wifi.h"
 #include "die.h"
 #include "fuji_typedefs.h"
@@ -67,33 +59,13 @@
 #include "pc6001/globals.h"
 #endif /* BUILD_PC6001 */
 
-#ifdef BUILD_PMD85
-#include "pmd85/io.h"
-#include "pmd85/screen.h"
-#include "pmd85/bar.h"
-#include "pmd85/input.h"
-#include "pmd85/globals.h"
-#endif /* BUILD_PMD85 */
-
-#ifdef BUILD_RC2014
-#include "rc2014/io.h"
-#include "rc2014/screen.h"
-#include "rc2014/bar.h"
-#include "rc2014/input.h"
-#include "rc2014/globals.h"
-#endif /* BUILD_RC2014 */
-
 WSSubState ws_subState;
 
 NetConfig nc;
 
-unsigned char numNetworks;
+static unsigned char numNetworks;
 
-#ifdef _CMOC_VERSION_
-void set_wifi_set_ssid(int i)
-#else
 void set_wifi_set_ssid(unsigned char i)
-#endif
 {
   SSIDInfo *s = io_get_scan_result(i);
   memcpy(nc.ssid,s->ssid,32);
@@ -150,17 +122,14 @@ void set_wifi_scan(void)
 
 void set_wifi_done(void)
 {
-  int result = io_set_ssid(&nc);
-  // always (good or bad) go to connect_wifi.
-  // I had used result to only show this when we have good return, but
-  // the connect_wifi shows error messages for us and jumps back to set wifi
-  // anyway when there's an error, so it's the correct choice either way.
+  io_set_ssid(&nc);
+  ws_subState=WS_SCAN;
   state = CONNECT_WIFI;
 }
 
 void set_wifi(void)
 {
-  ws_subState = WS_SCAN;
+
   while (state == SET_WIFI)
   {
     switch (ws_subState)
@@ -179,7 +148,7 @@ void set_wifi(void)
       break;
     case WS_DONE:
       set_wifi_done();
-      break;
+      return;
     }
   }
 }

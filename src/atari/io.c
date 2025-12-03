@@ -1,12 +1,13 @@
 #ifdef BUILD_ATARI
 /**
- * FujiNet SIO calls
+ * #FujiNet SIO calls
  */
 
 #include <atari.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 #include <conio.h> // Used for interacting with the standard Atari 'console'
 #include <unistd.h> // For sleep
 #include "io.h"
@@ -15,13 +16,14 @@
 #include "bar.h"
 
 static NetConfig nc;
-static AdapterConfigExtended adapterConfig;
+static AdapterConfig adapterConfig;
 static SSIDInfo ssidInfo;
 NewDisk newDisk;
 unsigned char wifiEnabled=true;
 
 // variable to hold various responses that we just need to return a char*.
-char response[256];
+char response[512];
+unsigned char directory_plus_filter[256];
 
 void set_sio_defaults(void)
 {
@@ -43,17 +45,24 @@ void io_init(void)
 {
   OS.noclik = 0xFF;
   OS.shflok = 0;
-  OS.color0 = 0x9f;
-  OS.color1 = 0x0f;
-  OS.color2 = 0x90;
-  OS.color4 = 0x90;
+  OS.color0 = 0x00;
+  OS.color1 = COLOR_FONT; // gr.0 font
+  OS.color3 = 0x00; 
+  OS.color2 = COLOR_BACKGROUND; // background
+  OS.color4 = COLOR_BORDER; // frame
   OS.coldst = 1;
   OS.sdmctl = 0; // Turn off screen
 }
 
 bool io_get_wifi_enabled(void)
 {
-  wifiEnabled = fuji_get_wifi_enabled();
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xEA; // Return wifi status
+  OS.dcb.dstats = 0x40; // Peripheral->Computer
+  OS.dcb.dbuf = &wifiEnabled;
+  OS.dcb.dbyt = 1;
+  OS.dcb.daux1 = 0;
+  siov();
 
   if (wifiEnabled == 1)
   {
@@ -69,10 +78,18 @@ bool io_get_wifi_enabled(void)
 unsigned char io_get_wifi_status(void)
 {
   unsigned char status;
-  fuji_get_wifi_status(&status);
+
+  sleep(1); // give the esp32 a moment to connect
+
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xFA; // Return wifi status
+  OS.dcb.dstats = 0x40; // Peripheral->Computer
+  OS.dcb.dbuf = &status;
+  OS.dcb.dbyt = 1;
+  OS.dcb.daux1 = 0;
+  siov();
 
   // Shouldn't do this here, but for now its temporary
-  // If ^^ is ever fixed, need to change io_set_ssid below too, which uses this colour hack
   if (status != 3)
   {
     bar_set_color(COLOR_SETTING_FAILED);
@@ -87,127 +104,266 @@ unsigned char io_get_wifi_status(void)
 
 NetConfig *io_get_ssid(void)
 {
-  fuji_get_ssid(&nc);
+
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xFE; // get_ssid
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = &nc;
+  OS.dcb.dtimlo = 0x0F; // 15 second timeout
+  OS.dcb.dbyt = sizeof(nc);
+  OS.dcb.daux = 0;
+  siov();
+
   return &nc;
 }
 
 unsigned char io_scan_for_networks(void)
 {
-  uint8_t count;
-  fuji_scan_for_networks(&count);
-  return count;
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xFD; // do scan
+  OS.dcb.dstats = 0x40; // Peripheral->Computer
+  OS.dcb.dbuf = &response;
+  OS.dcb.dbyt = 4; // 4 byte response
+  OS.dcb.daux = 0;
+  siov();
+
+  return response[0];
 }
 
 SSIDInfo *io_get_scan_result(unsigned char n)
 {
-  fuji_get_scan_result(n, &ssidInfo);
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xFC; // Return scan result
+  OS.dcb.dstats = 0x40; // Peripheral->Computer
+  OS.dcb.dbuf = &ssidInfo;
+  OS.dcb.dbyt = sizeof(ssidInfo);
+  OS.dcb.daux1 = n; // get entry #n
+  siov();
+
   return &ssidInfo;
 }
 
-AdapterConfigExtended *io_get_adapter_config(void)
+AdapterConfig *io_get_adapter_config(void)
 {
-  fuji_get_adapter_config_extended(&adapterConfig);
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xE8;
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = &adapterConfig;
+  OS.dcb.dtimlo = 0x0f;
+  OS.dcb.dbyt = sizeof(adapterConfig);
+  OS.dcb.daux = 0;
+  siov();
   return &adapterConfig;
 }
 
-int io_set_ssid(NetConfig *nc)
+void io_set_ssid(NetConfig *nc)
 {
-  bool is_err;
- 
-  fuji_set_ssid(nc);
-  is_err = fuji_error();
-  io_get_wifi_status(); // change bar color based on status.
-  return is_err;
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xFB; // Set SSID
+  OS.dcb.dstats = 0x80; // Computer->Peripheral
+  OS.dcb.dbuf = nc;
+  OS.dcb.dbyt = 97; // sizeof(nc);
+  OS.dcb.daux = 1;
+  siov();
 }
 
-bool io_get_device_slots(DeviceSlot *d)
+void io_get_device_slots(DeviceSlot *d)
 {
-  return fuji_get_device_slots(d, 8);
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xF2;
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = d;
+  OS.dcb.dbyt = sizeof(deviceSlots);
+  OS.dcb.daux = 0;
+  siov();
 }
 
-bool io_get_host_slots(HostSlot *h)
+void io_get_host_slots(HostSlot *h)
 {
-  return fuji_get_host_slots(h, 8);
+  // Query for host slots
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xF4; // Get host slots
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = h;
+  OS.dcb.dbyt = sizeof(hostSlots);
+  OS.dcb.daux = 0;
+  siov();
 }
 
 void io_put_host_slots(HostSlot *h)
 {
-  fuji_put_host_slots(h, 8);
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xF3;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = &hostSlots;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux = 0;
+  siov();
 }
 
 void io_put_device_slots(DeviceSlot *d)
 {
-  fuji_put_device_slots(d, 8);
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xF1;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = &deviceSlots;
+  OS.dcb.dbyt = sizeof(deviceSlots);
+  OS.dcb.daux = 0;
+  siov();
 }
 
-uint8_t io_mount_host_slot(unsigned char hs)
+void io_mount_host_slot(unsigned char hs)
 {
-  if (hostSlots[hs][0] == 0) return 2;
-  fuji_mount_host_slot(hs);
-  return 0;
+  if (hostSlots[hs][0] != 0x00)
+  {
+    set_sio_defaults();
+    OS.dcb.dcomnd = 0xF9;
+    OS.dcb.dstats = 0x00;
+    OS.dcb.dbuf = NULL;
+    OS.dcb.dbyt = 0;
+    OS.dcb.daux = hs;
+    siov();
+  }
 }
 
 void io_open_directory(unsigned char hs, char *p, char *f)
 {
-  char *_p = p;
+  set_sio_defaults();
+
   if (f[0] != 0x00)
   {
     // We have a filter, create a directory+filter string
-    memset(response, 0, 256);
-    strcpy(response, p);
-    strcpy(&response[strlen(response) + 1], f);
-    _p = &response;
+    memset(directory_plus_filter, 0, 256);
+    strcpy(directory_plus_filter, p);
+    strcpy(&directory_plus_filter[strlen(directory_plus_filter) + 1], f);
+    OS.dcb.dbuf = &directory_plus_filter;
   }
-  fuji_open_directory(hs, _p);
+  else
+  {
+    OS.dcb.dbuf = p;
+  }
+
+  OS.dcb.dcomnd = 0xF7;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = hs;
+  OS.dcb.daux2 = 0x01;
+
+  siov();
 }
+
+// Bits in a:
+//
+//   1000 0000 : Get extended file information
+//   0100 0000 : Return type info in first two bytes
+//   0010 0000 : Return long (item) name
+//   0001 0000 : Unused
+//   0000 1000 : ""
+//   0000 0100 : ""
+//   0000 0010 : ""
+//   0000 0001 : ""
 
 char *io_read_directory(unsigned char maxlen, unsigned char a)
 {
   memset(response, 0, maxlen);
-  fuji_read_directory(maxlen, a, &response);
+  response[0] = 0x7f;
+  OS.dcb.dcomnd = 0xF6;
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = &response;
+  OS.dcb.dbyt = maxlen;
+  OS.dcb.daux1 = maxlen;
+  OS.dcb.daux2 = a;
+  siov();
+
   return &response;
 }
 
 void io_close_directory(void)
 {
-  fuji_close_directory();
+  OS.dcb.dcomnd = 0xF5;
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dtimlo = 0x0f;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux = selected_host_slot;
+  siov();
 }
 
 void io_set_directory_position(DirectoryPosition pos)
 {
-  fuji_set_directory_position(pos);
+  OS.dcb.dcomnd = 0xE4;
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux = pos;
+  siov();
 }
 
-void io_set_device_filename(unsigned char ds, unsigned char hs, unsigned char mode, char* e)
+void io_set_device_filename(unsigned char ds, char *e)
 {
-  fuji_set_device_filename(mode, hs, ds, e);
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xE2;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = e;
+  OS.dcb.dtimlo = 0x0F;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = ds;
+  OS.dcb.daux2 = 0;
+  siov();
 }
 
 char *io_get_device_filename(unsigned char slot)
 {
-  fuji_get_device_filename(slot, &response);
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xDA;
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = &response;
+  OS.dcb.dtimlo = 0x0F;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = slot;
+  OS.dcb.daux2 = 0;
+  siov();
+
   return &response;
 }
 
 void io_set_boot_config(unsigned char toggle)
 {
-  fuji_set_boot_config(toggle);
+  OS.dcb.dcomnd = 0xD9;
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dtimlo = 0x0f;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux1 = toggle;
+  siov();
 }
 
-void io_set_boot_mode(unsigned char mode)
+void io_mount_disk_image(unsigned char ds, unsigned char mode)
 {
-  fuji_set_boot_mode(mode);
-}
-
-
-uint8_t io_mount_disk_image(unsigned char ds, unsigned char mode)
-{
-  return fuji_mount_disk_image(ds, mode);
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xF8;
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dbyt = 0;
+  OS.dcb.dtimlo = 0xFE; // Due to ATX support.
+  OS.dcb.daux1 = ds;
+  OS.dcb.daux2 = mode;
+  siov();
 }
 
 void io_umount_disk_image(unsigned char ds)
 {
-  fuji_unmount_disk_image(ds);
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xE9;
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = NULL;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux = ds;
+  siov();
 }
 
 void io_boot(void)
@@ -216,38 +372,40 @@ void io_boot(void)
 
 void io_create_new(unsigned char selected_host_slot, unsigned char selected_device_slot, unsigned long selected_size, char *path)
 {
-  switch (selected_size)
+  if (selected_size == 999)
   {
-  case 90:
-    newDisk.numSectors = 720;
-    newDisk.sectorSize = 128;
-    break;
-  case 130:
-    newDisk.numSectors = 1040;
-    newDisk.sectorSize = 128;
-    break;
-  case 180:
-    newDisk.numSectors = 720;
-    newDisk.sectorSize = 256;
-    break;
-  case 360:
-    newDisk.numSectors = 1440;
-    newDisk.sectorSize = 256;
-    break;
-  case 720:
-    newDisk.numSectors = 2880;
-    newDisk.sectorSize = 256;
-    break;
-  case 1440:
-    newDisk.numSectors = 5760;
-    newDisk.sectorSize = 256;
-    break;
-  case 999:
     newDisk.numSectors = custom_numSectors;
     newDisk.sectorSize = custom_sectorSize;
-    break;
-  default:
-    return;
+  }
+  else
+  {
+    switch (selected_size)
+    {
+    case 90:
+      newDisk.numSectors = 720;
+      newDisk.sectorSize = 128;
+      break;
+    case 130:
+      newDisk.numSectors = 1040;
+      newDisk.sectorSize = 128;
+      break;
+    case 180:
+      newDisk.numSectors = 720;
+      newDisk.sectorSize = 256;
+      break;
+    case 360:
+      newDisk.numSectors = 1440;
+      newDisk.sectorSize = 256;
+      break;
+    case 720:
+      newDisk.numSectors = 2880;
+      newDisk.sectorSize = 256;
+      break;
+    case 1440:
+      newDisk.numSectors = 5760;
+      newDisk.sectorSize = 256;
+      break;
+    }
   }
 
   newDisk.hostSlot = selected_host_slot;
@@ -255,9 +413,14 @@ void io_create_new(unsigned char selected_host_slot, unsigned char selected_devi
   deviceSlots[selected_device_slot].mode = mode;
   strcpy(newDisk.filename, path);
 
-  deviceSlots[selected_device_slot].mode = mode;
-  fuji_create_new(&newDisk);
-
+  set_sio_defaults();
+  OS.dcb.dcomnd = 0xE7;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = &newDisk;
+  OS.dcb.dtimlo = 0xFE;
+  OS.dcb.dbyt = sizeof(newDisk);
+  OS.dcb.daux = 0;
+  siov();
 }
 
 void io_build_directory(unsigned char ds, unsigned long numBlocks, char *v)
@@ -295,8 +458,16 @@ void io_disable_device(unsigned char d)
  */
 void io_copy_file(unsigned char source_slot, unsigned char destination_slot)
 {
-  // incrementing is handled in function, we keep everything 0 based
-  fuji_copy_file(source_slot, destination_slot, &copySpec);
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xD8;
+  OS.dcb.dstats = 0x80;
+  OS.dcb.dbuf = &copySpec;
+  OS.dcb.dtimlo = 0xFE; // Max timeout
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = source_slot + 1;
+  OS.dcb.daux2 = destination_slot + 1;
+  siov();
 }
 
 unsigned char io_device_slot_to_device(unsigned char ds)
@@ -308,16 +479,34 @@ unsigned char io_device_slot_to_device(unsigned char ds)
  */
 void io_get_filename_for_device_slot(unsigned char slot, const char *filename)
 {
-  fuji_get_device_filename(slot, filename);
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xDA;
+  OS.dcb.dstats = 0x40;
+  OS.dcb.dbuf = filename;
+  OS.dcb.dtimlo = 0x0F;
+  OS.dcb.dbyt = 256;
+  OS.dcb.daux1 = slot;
+  OS.dcb.daux2 = 0;
+  siov();
 }
 
 /**
  * Mount all hosts and devices
  */
-bool io_mount_all(void)
+unsigned char io_mount_all(void)
 {
-  return fuji_mount_all();
-  // return OS.dcb.dstats; // 1 = successful, anything else = error.
+  OS.dcb.ddevic = 0x70;
+  OS.dcb.dunit = 1;
+  OS.dcb.dcomnd = 0xD7;
+  OS.dcb.dstats = 0x00;
+  OS.dcb.dbuf = 0x00;
+  OS.dcb.dtimlo = 0x0F;
+  OS.dcb.dbyt = 0;
+  OS.dcb.daux = 0;
+  siov();
+
+  return OS.dcb.dstats; // 1 = successful, anything else = error.
 }
 
 #endif /* BUILD_ATARI */

@@ -1,25 +1,23 @@
 #ifdef BUILD_ADAM
 /**
+ * FujiNet Config for Adam
+ * 
  * Cursor routines
  */
 
-#include <video/tms99x8.h>
+#include <msx.h>
 #include "cursor.h"
-
-static const unsigned char blank[8] =
-  {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-
-static const unsigned char _cursor[8] =
-  {0x00,0x00,0x00,0x00,0x00,0x00,0xFF,0xFF};
 
 void cursor(bool t)
 {
-  vdp_set_sprite_8(0,t ? _cursor : blank);
+  msx_vfill(0x3806,t == true ? 0xFF : 0x00, 2);
+  msx_vfill(0x1b00,0x00,4);
+  msx_vpoke(0x1b03,4);
 }
 
 void cursor_pos(unsigned char x, unsigned char y)
 {
-  vdp_put_sprite_8(0,x<<3,y<<3,0,VDP_INK_DARK_BLUE);
+  msx_vpoke(0x1b00,(y<<3)-1);
+  msx_vpoke(0x1b01,(x<<3)+1);
 }
-
 #endif /* BUILD_ADAM */

@@ -90,14 +90,14 @@ AdapterConfig *io_get_adapter_config(void)
   return (AdapterConfig *)response;
 }
 
-int io_set_ssid(NetConfig *nc)
+void io_set_ssid(NetConfig *nc)
 {
   unsigned char c[98]={0xFB};
 
   memcpy(&c[1],nc,sizeof(NetConfig));
 
   eos_write_character_device(FUJI_DEV,&c,sizeof(c));
-  return 0;
+
 }
 
 void io_get_device_slots(DeviceSlot *d)
@@ -262,42 +262,31 @@ void io_boot(void)
 
 void io_build_directory(unsigned char ds, unsigned long numBlocks, char *v)
 {
-  unsigned int db = 1; // 1 directory block by default
-  unsigned int nb = (unsigned short)numBlocks;
-  DCB *dcb = NULL;
-  unsigned char s=0;
-  
+  unsigned int nb = numBlocks;
+
   // End volume label
   v[strlen(v)]=0x03;
 
   // Adjust device slot to EOS device #
   ds += 4;
 
-  memset(response,0,sizeof(response));
-  
-  for (unsigned long i=0;i<db;i++)
-    {
-      eos_write_block(ds,i+1,&response[0]);
-    }
-    
-  memset(response,0,sizeof(response));
+  // Set up block 0 to boot right into SmartWriter
+  memset(response,0,1024);
   response[0]=0xC3;
   response[1]=0xE7;
   response[2]=0xFC;
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
+  eos_write_block(ds,0,&response[0]);
 
-  eos_write_block(ds,0UL,&response[0]);
-
-  if (numBlocks>719)
-    db=6;
-  else if (numBlocks>319)
-    db=3;
-  else if (numBlocks>160)
-    db=2;
-  else
-    db=1;
-
-  eos_initialize_directory(ds,db,nb,v);
-  
+  // Write directory
+  eos_initialize_directory(ds, 1, nb, v);
+  eos_initialize_directory(ds, 1, nb, v);
 }
 
 bool io_get_device_enabled_status(unsigned char d)
@@ -358,15 +347,12 @@ void io_update_devices_enabled(bool *e)
 void io_copy_file(unsigned char source_slot, unsigned char destination_slot)
 {
   char cf[259]={0xD8,0x00,0x00};
-  DCB *dcb = NULL;
-  
+
   cf[1]=source_slot;
   cf[2]=destination_slot;
   strcpy(&cf[3],copySpec);
 
   eos_write_character_device(FUJI_DEV,cf,sizeof(cf));
-
-  while (eos_request_device_status(FUJI_DEV,dcb) != 0x80);
 }
 
 unsigned char io_device_slot_to_device(unsigned char ds)

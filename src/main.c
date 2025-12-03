@@ -1,14 +1,9 @@
 /**
- * FujiNet for ADAM Configuration Tool
+ * #FujiNet for ADAM Configuration Tool
  *
  */
 
-#ifdef _CMOC_VERSION_
-#include "coco/stdbool.h"
-#else
 #include <stdlib.h>
-#endif /* CMOC_VERSION */
-
 #include "typedefs.h"
 #include "check_wifi.h"
 #include "connect_wifi.h"
@@ -53,28 +48,7 @@
 #include "pc6001/screen.h"
 #endif /* BUILD_PC6001 */
 
-#ifdef BUILD_PMD85
-#include "pmd85/io.h"
-#include "pmd85/screen.h"
-#endif /* BUILD_PMD85 */
-
-#ifdef BUILD_RC2014
-#include "rc2014/io.h"
-#include "rc2014/screen.h"
-#endif /* BUILD_RC2014 */
-
 State state=HOSTS_AND_DEVICES;
-bool backToFiles=false;
-bool backFromCopy=false;
-
-#ifdef _CMOC_VERSION_
-extern void io_init();
-extern void screen_init();
-extern void io_set_boot_config();
-extern void io_boot();
-#define true 1
-#define false 0
-#endif /* CMOC_VERSION */
 
 void setup(void)
 {
@@ -137,10 +111,20 @@ void run(void)
   }
 }
 
-int main(void)
+void main(void)
 {
 	setup();
 	state = CHECK_WIFI;
 	run();
-	return 0;
 }
+
+#ifdef BUILD_A2CDA
+void Start(void)
+{
+	main();
+}
+
+void ShutDown(void)
+{
+}
+#endif /* BUILD_A2CDA */

@@ -10,6 +10,7 @@
 #include "bar.h"
 #include <conio.h>
 #include <sys/ioctl.h>
+#include <eos.h>
 #include <string.h>
 
 extern bool copy_mode;
@@ -167,6 +168,7 @@ void screen_select_file(void)
 void screen_select_file_display(char *p, char *f)
 {
   // Update content area
+  msx_color(15,4,7);
   gotoxy(0,0); cprintf("%32s",copy_mode == true ? copy_host_name : selected_host_name);
 
   if (f[0]==0x00)
@@ -196,7 +198,7 @@ void screen_select_file_next(void)
   gotoxy(0,18); cprintf("%32s","[...]");
 }
 
-void screen_select_file_display_entry(unsigned char y, char* e, unsigned entryType)
+void screen_select_file_display_entry(unsigned char y, char* e)
 {
   gotoxy(0,y+3);
   cprintf("%c%c",*e++,*e++);

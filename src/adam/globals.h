@@ -25,14 +25,11 @@ extern HostSlot hostSlots[8];
 extern char mode;
 
 extern DirectoryPosition pos;
-extern DirectoryPosition old_pos;
 extern char path[224];
 extern char filter[32];
 extern bool create;
 extern bool dir_eof;
 extern bool quick_boot;
-extern bool backToFiles;
-extern bool backFromCopy;
 
 #define NUM_DEVICE_SLOTS 4
 
