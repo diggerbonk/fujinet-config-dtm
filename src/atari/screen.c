@@ -40,33 +40,33 @@ char fn[256];
 //     40-5F      00-1F      ATASCII characters
 //     60-7F      60-7F      Lower case characters & some ATASCII chars
 
-unsigned char fontPatch[56] = {
-    0  ,0  ,0  ,0  ,0  ,0  ,3  ,51, // WIFI BARS 1 
-    0  ,0  ,3  ,3  ,51 ,51 ,51 ,51, // WIFI BARS 2 
-    48 ,48 ,48 ,48 ,48 ,48 ,48 ,48, // WIFI BARS 3
-    0  ,120,135,255,255,255,255,0,  // CH_FOLDER 
-    0  ,0  ,112,206,115,14 ,0  ,0,  // CH_LINK  
-    0  ,0  ,24 ,60 ,60 ,24 ,0  ,0,  // CH_OTHER
-    0  ,0  ,254,0  ,254,0  ,254,0   // CH_MENU
-};
+//unsigned char fontPatch[56] = {
+//    0  ,0  ,0  ,0  ,0  ,0  ,3  ,51, // WIFI BARS 1 
+//    0  ,0  ,3  ,3  ,51 ,51 ,51 ,51, // WIFI BARS 2 
+//    48 ,48 ,48 ,48 ,48 ,48 ,48 ,48, // WIFI BARS 3
+//    0  ,120,135,255,255,255,255,0,  // CH_FOLDER 
+//    0  ,0  ,112,206,115,14 ,0  ,0,  // CH_LINK  
+//    0  ,0  ,24 ,60 ,60 ,24 ,0  ,0,  // CH_OTHER
+//    0  ,0  ,254,0  ,254,0  ,254,0   // CH_MENU
+//};
 
-void font_init()
-{
-  // Copy ROM font
-  memcpy((unsigned char *)FONT_MEMORY, (unsigned char *)0xE000, 1024);
-
-  // And patch it. We're going to do this in various places to avoid 
-  // writing over graphic drawing blocks.
-  memcpy(FONT_MEMORY + 528, &fontPatch, 8);     // map to 02 empty box
-  memcpy(FONT_MEMORY + 640, &fontPatch[8], 8);  // map to 10 club
-  memcpy(FONT_MEMORY + 672, &fontPatch[16], 8); // map to 14 circle
-  memcpy(FONT_MEMORY + 728, &fontPatch[24], 8); // map to 1B escape
-  memcpy(FONT_MEMORY + 768, &fontPatch[32], 8); // map to 60 diamond
-  memcpy(FONT_MEMORY + 984, &fontPatch[40], 8); // map to 7B empty
-  memcpy(FONT_MEMORY + 1000,&fontPatch[48], 8); // map to 7D nw arrow
-
-  OS.chbas = FONT_MEMORY >> 8; // use the charset
-}
+//void font_init()
+//{
+//  // Copy ROM font
+//  memcpy((unsigned char *)FONT_MEMORY, (unsigned char *)0xE000, 1024);
+//
+//  // And patch it. We're going to do this in various places to avoid 
+//  // writing over graphic drawing blocks.
+//  memcpy(FONT_MEMORY + 528, &fontPatch, 8);     // map to 02 empty box
+//  memcpy(FONT_MEMORY + 640, &fontPatch[8], 8);  // map to 10 club
+//  memcpy(FONT_MEMORY + 672, &fontPatch[16], 8); // map to 14 circle
+//  memcpy(FONT_MEMORY + 728, &fontPatch[24], 8); // map to 1B escape
+//  memcpy(FONT_MEMORY + 768, &fontPatch[32], 8); // map to 60 diamond
+//  memcpy(FONT_MEMORY + 984, &fontPatch[40], 8); // map to 7B empty
+//  memcpy(FONT_MEMORY + 1000,&fontPatch[48], 8); // map to 7D nw arrow
+//
+//  OS.chbas = FONT_MEMORY >> 8; // use the charset
+//}
 
 void screen_mount_and_boot()
 {
@@ -106,18 +106,18 @@ void screen_set_wifi_print_rssi(SSIDInfo *s, unsigned char i)
 
   if (s->rssi > -40)
   {
-    out[0] = CH_WIFI_BARS1;
-    out[1] = CH_WIFI_BARS2;
-    out[2] = CH_WIFI_BARS3;
+    out[0] = "|";
+    out[1] = "|";
+    out[2] = "|";
   }
   else if (s->rssi > -60)
   {
-    out[0] = CH_WIFI_BARS1;
-    out[1] = CH_WIFI_BARS2;
+    out[0] = "|";
+    out[1] = "|";
   }
   else
   {
-    out[0] = CH_WIFI_BARS1;
+    out[0] = "|";
   }
 
   cputsxy(35, i + NETWORKS_START_Y, out);
@@ -333,9 +333,8 @@ void screen_select_file_display(char *p, char *f)
   unsigned char i;
   screen_clear_line(0);
   screen_clear_line(1);
-  cputsxy(0, 0, CH_LINK);
-  cputsxy(2, 0, selected_host_name);
-  cputsxy(2 + strlen(selected_host_name),0, p);
+  cputsxy(0, 0, selected_host_name);
+  cputsxy(strlen(selected_host_name),0, p);
 
   // Path - the path can wrap to line 4 (maybe 5?) so clear both to be safe.
   //cputsxy(0, 1, "Path:");
@@ -393,15 +392,15 @@ void screen_select_file_display_entry(unsigned char y, char *e, unsigned entryTy
 {
   if (entryType > 0)
   {
-    if (entryType == 1) cputsxy(1,FILES_START_Y+y,CH_FOLDER);
-    else if (entryType == 3) cputsxy(1,FILES_START_Y+y,CH_LINK);
-    else if (entryType == 4) cputsxy(1,FILES_START_Y+y,CH_MENU);
-    else cputsxy(1,FILES_START_Y+y,CH_OTHER);
-    cputsxy(3, FILES_START_Y + y, e);
+    if (entryType == 1) cputsxy(0,FILES_START_Y+y,"/");
+    else if (entryType == 2) cputsxy(0,FILES_START_Y+y,"-");
+    else if (entryType == 3) cputsxy(0,FILES_START_Y+y,">");
+    else cputsxy(0,FILES_START_Y+y," ");
+    cputsxy(1, FILES_START_Y + y, e);
   }
   else 
   {
-    cputsxy(0, FILES_START_Y + y, e);
+    cputsxy(1, FILES_START_Y + y, e);
   }
 }
 
@@ -668,7 +667,7 @@ void screen_hosts_and_devices_long_filename(char *f)
 
 void screen_init(void)
 {
-  font_init();
+  //font_init();
   bar_setup_regs();
   bar_clear(false);
 

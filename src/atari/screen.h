@@ -47,7 +47,7 @@ void set_wifi_print_rssi(SSIDInfo *s, unsigned char i);
 // void screen_set_wifi_display_mac_address(AdapterConfig *adapterConfig);
 
 void screen_select_slot_mode(void);
-void font_init();
+//void font_init();
 extern void bar_setup_regs();
 void screen_puts(unsigned char x, unsigned char y, char *s);
 void screen_clear_line(unsigned char y);
@@ -118,13 +118,13 @@ extern unsigned char *cursor_ptr;
  * The following defines assign an Atari internal code (2) character to specific labels used for display.
  **/
 
-#define CH_FOLDER "\x1B"      // Set the character folder to #
-#define CH_LINK  "\x60"      // Set the server folder to atari heart.
-#define CH_OTHER "\x7B"    
-#define CH_MENU  "\x7D"
-#define CH_WIFI_BARS1 0x02
-#define CH_WIFI_BARS2 0x10
-#define CH_WIFI_BARS3 0x14
+//#define CH_FOLDER "\x1B"      // Set the character folder to #
+//#define CH_LINK  "\x60"      // Set the server folder to atari heart.
+//#define CH_OTHER "\x7B"    
+//#define CH_MENU  "\x7D"
+//#define CH_WIFI_BARS1 0x02
+//#define CH_WIFI_BARS2 0x10
+//#define CH_WIFI_BARS3 0x14
 
 #define CH_KEY_LABEL_L "\x99" // Left arrow on the keyboard
 #define CH_KEY_LABEL_R "\x19" // Right arrow on the keyboard
