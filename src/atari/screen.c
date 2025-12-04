@@ -296,12 +296,7 @@ void screen_select_file_display(char *p, char *f)
   cputsxy(0, 0, selected_host_name);
   cputsxy(strlen(selected_host_name),0, p);
 
-  // Path - the path can wrap to line 4 (maybe 5?) so clear both to be safe.
-  //cputsxy(0, 1, "Path:");
-  //cputsxy(5, 1, p);
-
-  // Filter
-  //cputsxy(8, 22, CH_KEY_F "ilter:");
+  // display the filter name
   cputsxy(7, 22, f);
 
   // Clear out the file area
