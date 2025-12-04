@@ -25,7 +25,7 @@
 #include "atari/globals.h"
 #include "atari/input.h"
 #include "atari/bar.h"
-#define DIR_MAX_LEN 36
+#define DIR_MAX_LEN 40
 #endif
 
 #ifdef BUILD_APPLE2
@@ -44,7 +44,7 @@
 #include "c64/globals.h"
 #include "c64/input.h"
 #include "c64/bar.h"
-#define DIR_MAX_LEN 36
+#define DIR_MAX_LEN 40
 #define ENTRIES_PER_PAGE 15
 #endif /* BUILD_C64 */
 
@@ -136,7 +136,7 @@ unsigned char select_file_display(void)
 
   for (i = 0; i < ENTRIES_PER_PAGE; i++)
   {
-    e = io_read_directory(39/*DIR_MAX_LEN*/, 0x40);
+    e = io_read_directory(42/*DIR_MAX_LEN*/, 0x40);
 #ifdef BUILD_ADAM
 #define FUDGE_OFFSET 2
 #else

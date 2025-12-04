@@ -1,0 +1,15 @@
+src/atari/bar.c
+src/atari/globals.h
+src/atari/input.c
+src/atari/input.h
+src/atari/io.c
+src/atari/io.h
+src/atari/mount_and_boot.c
+src/atari/screen.c
+src/atari/screen.h
+src/select_file.c
+src/select_file.h
+src/*/screen.h
+src/*/screen.c
+src/typedefs.h
+src/atari/fuji_typedefs.h
