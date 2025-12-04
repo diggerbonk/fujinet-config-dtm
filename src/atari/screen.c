@@ -28,46 +28,6 @@ extern bool copy_mode;
 char text_empty[] = "Empty";
 char fn[256];
 
-// Patch to the character set to add things like the folder icon and the wifi-signal-strength bars.
-// Each new character is 8-bytes.
-// Note that the characters are not stored in memory in the same order as 
-// ATASCII order, the mapping goes (roughly) like this:
-//     
-//     Memory     ATASCII    Description
-//     00-0F      20-2F      Typewriter top row symbols
-//     10-1F      30-3F      Digits & more typewriter symbols
-//     20-3F      40-3F      Upper case alphabet
-//     40-5F      00-1F      ATASCII characters
-//     60-7F      60-7F      Lower case characters & some ATASCII chars
-
-//unsigned char fontPatch[56] = {
-//    0  ,0  ,0  ,0  ,0  ,0  ,3  ,51, // WIFI BARS 1 
-//    0  ,0  ,3  ,3  ,51 ,51 ,51 ,51, // WIFI BARS 2 
-//    48 ,48 ,48 ,48 ,48 ,48 ,48 ,48, // WIFI BARS 3
-//    0  ,120,135,255,255,255,255,0,  // CH_FOLDER 
-//    0  ,0  ,112,206,115,14 ,0  ,0,  // CH_LINK  
-//    0  ,0  ,24 ,60 ,60 ,24 ,0  ,0,  // CH_OTHER
-//    0  ,0  ,254,0  ,254,0  ,254,0   // CH_MENU
-//};
-
-//void font_init()
-//{
-//  // Copy ROM font
-//  memcpy((unsigned char *)FONT_MEMORY, (unsigned char *)0xE000, 1024);
-//
-//  // And patch it. We're going to do this in various places to avoid 
-//  // writing over graphic drawing blocks.
-//  memcpy(FONT_MEMORY + 528, &fontPatch, 8);     // map to 02 empty box
-//  memcpy(FONT_MEMORY + 640, &fontPatch[8], 8);  // map to 10 club
-//  memcpy(FONT_MEMORY + 672, &fontPatch[16], 8); // map to 14 circle
-//  memcpy(FONT_MEMORY + 728, &fontPatch[24], 8); // map to 1B escape
-//  memcpy(FONT_MEMORY + 768, &fontPatch[32], 8); // map to 60 diamond
-//  memcpy(FONT_MEMORY + 984, &fontPatch[40], 8); // map to 7B empty
-//  memcpy(FONT_MEMORY + 1000,&fontPatch[48], 8); // map to 7D nw arrow
-//
-//  OS.chbas = FONT_MEMORY >> 8; // use the charset
-//}
-
 void screen_mount_and_boot()
 {
   screen_clear();
