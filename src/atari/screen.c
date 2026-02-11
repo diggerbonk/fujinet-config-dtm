@@ -38,44 +38,6 @@ uint32_t s;
 //
 _screen active_screen = SCREEN_HOSTS_AND_DEVICES;
 
-// Set up the initial display list.
-// Note: Using 25 lines in this version vs 23 in the original config (2 additional at the bottom).
-void config_dlist =
-    {
-        DL_BLK8,              // 0x00 (8 Blank Scanlines)
-        DL_BLK8,              // 0x01 (8 Blank Scanlines)
-        DL_BLK8,              // 0x02 (8 Blank Scanlines)
-        DL_LMS(DL_CHR20x8x2), // 0x03 Line 0 (first line of displayable text, will start at coordinates 0,0)
-        DISPLAY_MEMORY,       // 0x04 and 0x05 This is the high order bit location of the display list.  Defined in screen.h
-        DL_CHR20x8x2,         // 0x06  Line 1
-        DL_CHR40x8x1,         // 0x07  Line 2
-        DL_CHR40x8x1,         // 0x08  Line 3
-        DL_CHR40x8x1,         // 0x09  Line 4
-        DL_CHR40x8x1,         // 0x0a  Line 5
-        DL_CHR40x8x1,         // 0x0b  Line 6
-        DL_CHR40x8x1,         // 0x0c  Line 7
-        DL_CHR40x8x1,         // 0x0d  Line 8
-        DL_CHR40x8x1,         // 0x0e  Line 9
-        DL_CHR40x8x1,         // 0x0f  Line 10
-        DL_CHR40x8x1,         // 0x10  Line 11
-        DL_CHR40x8x1,         // 0x11  Line 12
-        DL_CHR40x8x1,         // 0x12  Line 13
-        DL_CHR40x8x1,         // 0x13  Line 14
-        DL_CHR40x8x1,         // 0x14  Line 15
-        DL_CHR40x8x1,         // 0x15  Line 16
-        DL_CHR40x8x1,         // 0x16  Line 17
-        DL_CHR40x8x1,         // 0x17  Line 18
-        DL_CHR40x8x1,         // 0x18  Line 19
-        DL_CHR40x8x1,         // 0x19  Line 20
-        DL_CHR40x8x1,         // 0x1a  Line 21
-        DL_CHR20x8x2,         // 0x1b  Line 22
-        DL_CHR20x8x2,         // 0x1c  Line 23
-        DL_CHR40x8x1,         // 0x1d  Line 24
-        DL_CHR40x8x1,         // 0x1e  Line 25
-        DL_JVB,               // Signal to ANTIC end of DISPLAY_LIST has been reached and loop back to the beginning.  The jump to the begining is located at the next two bits defined below.
-        DISPLAY_LIST          // 0x1f, 0x20  Memory address containing the entire display list.
-};
-
 // Patch to the character set to add things like the folder icon and the wifi-signal-strength bars.
 // Each new character is 8-bytes.
 //
@@ -93,40 +55,9 @@ void set_active_screen(unsigned char screen)
   active_screen = screen;
 }
 
-/**********************
- * Print ATASCII string to display memory.  Note: ATASCII is not a 1:1 mapping for ASCII.  It is a ven diagram with significant overlap.
- */
-void put_char(char c)
-{
-  char offset;
-  if (c < 32)
-  {
-    offset = 64;
-  }
-  else if (c < 96)
-  {
-    offset = -32;
-  }
-  else
-  {
-    offset = 0;
-  }
-  POKE(cursor_ptr++, c + offset); // Insert into the locaiton in memory for next bit in cursor_ptr the ATASCI character.  c+offset is the ATASCI character desired to be displayed.
-}
-
-void screen_append(const char *s)
-{
-  while (*s != 0)
-  {
-    put_char(*s);
-    ++s;
-  }
-}
-
 void screen_puts(unsigned char x, unsigned char y, const char *s)
 {
-  set_cursor(x, y);
-  screen_append(s);
+  cputsxy(x,y,s);
 }
 
 void font_init()
@@ -142,7 +73,6 @@ void font_init()
 
 void screen_mount_and_boot()
 {
-  screen_dlist_mount_and_boot();
   set_active_screen(SCREEN_MOUNT_AND_BOOT);
   screen_clear();
   bar_clear(false);
@@ -153,14 +83,13 @@ void screen_set_wifi_extended(AdapterConfigExtended *ac)
   unsigned char i = 0;
   unsigned char x = 13;
 
-  screen_dlist_set_wifi();
   set_active_screen(SCREEN_SET_WIFI);
   screen_clear();
   bar_clear(false);
-  screen_puts(0, 0, "WELCOME TO FUJINET!");
-  screen_puts(0, 23, "SCANNING NETWORKS...");
-  screen_puts(0, 2, "MAC Address:");
-  screen_puts(13, 2, ac->sMacAddress);
+  cputsxy(0, 0, "WELCOME TO FUJINET!");
+  cputsxy(0, 23, "SCANNING NETWORKS...");
+  cputsxy(0, 2, "MAC Address:");
+  cputsxy(13, 2, ac->sMacAddress);
 }
 
 void screen_set_wifi_print_rssi(SSIDInfo *s, unsigned char i)
@@ -183,21 +112,21 @@ void screen_set_wifi_print_rssi(SSIDInfo *s, unsigned char i)
     out[0] = 0x01;
   }
 
-  screen_puts(35, i + NETWORKS_START_Y, out);
+  cputsxy(35, i + NETWORKS_START_Y, out);
 }
 
 void screen_set_wifi_display_ssid(char n, SSIDInfo *s)
 {
-  screen_puts(2, n + NETWORKS_START_Y, (char *)s->ssid);
+  cputsxy(2, n + NETWORKS_START_Y, (char *)s->ssid);
   screen_set_wifi_print_rssi(s, n);
 }
 
 void screen_set_wifi_select_network(unsigned char)
 {
   screen_clear_line(numNetworks + NETWORKS_START_Y);
-  screen_puts(2, NETWORKS_START_Y + numNetworks, "<Enter a specific SSID>");
+  cputsxy(2, NETWORKS_START_Y + numNetworks, "<Enter a specific SSID>");
 
-  screen_puts(0, 23, " SELECT NET, S SKIP "
+  cputsxy(0, 23, " SELECT NET, S SKIP "
                      "   ESC TO RE-SCAN   ");
 
   bar_show(NETWORKS_START_Y);
@@ -206,7 +135,7 @@ void screen_set_wifi_select_network(unsigned char)
 void screen_set_wifi_custom(void)
 {
   screen_clear_line(20);
-  screen_puts(0, 22, " ENTER NETWORK NAME "
+  cputsxy(0, 22, " ENTER NETWORK NAME "
                      "  AND PRESS return  ");
 }
 
@@ -214,7 +143,7 @@ void screen_set_wifi_password(void)
 {
   screen_clear_line(23);
   screen_clear_line(24);
-  screen_puts(0, 23, "    ENTER PASSWORD");
+  cputsxy(0, 23, "    ENTER PASSWORD");
 }
 
 
@@ -223,48 +152,46 @@ void screen_set_wifi_password(void)
  */
 void screen_show_info_extended(bool, AdapterConfigExtended *ac)
 {
-  screen_dlist_show_info();
   set_active_screen(SCREEN_SHOW_INFO);
   screen_clear();
   bar_clear(false);
 
-  screen_puts(3, 5, "FUJINET CONFIG");
-  screen_puts(7, 17,
+  cputsxy(3, 5, "FUJINET CONFIG");
+  cputsxy(7, 17,
               CH_KEY_LABEL_L CH_INV_C CH_KEY_LABEL_R "RECONNECT " CH_KEY_LABEL_L CH_INV_S CH_KEY_LABEL_R "CHANGE SSID");
-  screen_puts(9, 19, "Any other key to return");
-  screen_puts(5, 7, "      SSID:");
-  screen_puts(5, 8, "  Hostname:");
-  screen_puts(5, 9, "IP Address:");
-  screen_puts(5, 10, "   Gateway:");
-  screen_puts(5, 11, "       DNS:");
-  screen_puts(5, 12, "   Netmask:");
-  screen_puts(5, 13, "       MAC:");
-  screen_puts(5, 14, "     BSSID:");
-  screen_puts(5, 15, "   Version:");
+  cputsxy(9, 19, "Any other key to return");
+  cputsxy(5, 7, "      SSID:");
+  cputsxy(5, 8, "  Hostname:");
+  cputsxy(5, 9, "IP Address:");
+  cputsxy(5, 10, "   Gateway:");
+  cputsxy(5, 11, "       DNS:");
+  cputsxy(5, 12, "   Netmask:");
+  cputsxy(5, 13, "       MAC:");
+  cputsxy(5, 14, "     BSSID:");
+  cputsxy(5, 15, "   Version:");
 
-  screen_puts(17, 7, ac->ssid);
-  screen_puts(17, 8, ac->hostname);
-  screen_puts(17, 9, ac->sLocalIP);
-  screen_puts(17, 10, ac->sGateway);
-  screen_puts(17, 11, ac->sDnsIP);
-  screen_puts(17, 12, ac->sNetmask);
-  screen_puts(17, 13, ac->sMacAddress);
-  screen_puts(17, 14, ac->sBssid);
-  screen_puts(17, 15, ac->fn_version);
+  cputsxy(17, 7, ac->ssid);
+  cputsxy(17, 8, ac->hostname);
+  cputsxy(17, 9, ac->sLocalIP);
+  cputsxy(17, 10, ac->sGateway);
+  cputsxy(17, 11, ac->sDnsIP);
+  cputsxy(17, 12, ac->sNetmask);
+  cputsxy(17, 13, ac->sMacAddress);
+  cputsxy(17, 14, ac->sBssid);
+  cputsxy(17, 15, ac->fn_version);
 }
 
 void screen_select_slot(const char *e)
 {
   unsigned long *s;
-  screen_dlist_select_slot();
   set_active_screen(SCREEN_SELECT_SLOT);
 
   screen_clear();
 
-  screen_puts(0, 22,
+  cputsxy(0, 22,
               CH_KEY_1TO8 "Slot" CH_KEY_RETURN "Select" CH_KEY_LABEL_L CH_INV_E CH_KEY_LABEL_R "ject" CH_KEY_ESC "Abort");
 
-  screen_puts(0, 0, "MOUNT TO DRIVE SLOT");
+  cputsxy(0, 0, "MOUNT TO DRIVE SLOT");
 
   // Show file details if it's an existing file only.
   if ( create == false )
@@ -273,20 +200,20 @@ void screen_select_slot(const char *e)
 
     // Modified time
     sprintf(d, "%8s %04u-%02u-%02u %02u:%02u:%02u", "MTIME:", (*e++) + 1970, *e++, *e++, *e++, *e++, *e++);
-    screen_puts(0, DEVICES_END_MOUNT_Y + 3, d);
+    cputsxy(0, DEVICES_END_MOUNT_Y + 3, d);
 
     
     // File size
     s=(unsigned long *)e; // Cast the next four bytes as a long integer.
 
     sprintf(d, "%8s %lu K", "SIZE:", *s >> 10);
-    screen_puts(0, DEVICES_END_MOUNT_Y + 4, d);
+    cputsxy(0, DEVICES_END_MOUNT_Y + 4, d);
 
      e += sizeof(unsigned long) + 3; // Skip isdir, trunc, type
      
     // Filename
-    screen_puts(3, DEVICES_END_MOUNT_Y + 2, "FILE:");
-    screen_puts(9, DEVICES_END_MOUNT_Y + 2, e);
+    cputsxy(3, DEVICES_END_MOUNT_Y + 2, "FILE:");
+    cputsxy(9, DEVICES_END_MOUNT_Y + 2, e);
   }
 
   screen_hosts_and_devices_device_slots(DEVICES_START_MOUNT_Y, deviceSlots, deviceEnabled);
@@ -297,7 +224,7 @@ void screen_select_slot(const char *e)
 void screen_select_slot_mode(void)
 {
   screen_clear_line(21);
-  screen_puts(0, 22,
+  cputsxy(0, 22,
               CH_KEY_RETURN "Read Only" CH_KEY_LABEL_L CH_INV_W CH_KEY_LABEL_R "Read/Write" CH_KEY_ESC "Abort");
 }
 
@@ -323,58 +250,64 @@ void screen_select_slot_build_eos_directory_creating(void)
 
 void screen_select_file(void)
 {
-  screen_dlist_select_file();
   set_active_screen(SCREEN_SELECT_FILE);
   screen_clear();
   bar_clear(false);
 
-  screen_puts(4, 0, "DISK IMAGES");
+//cputsxy(4, 0, "DISK IMAGES");
+cputsxy(0, FILES_START_Y - 1, HORIZONTAL_LINE);
+cputsxy(0, FILES_START_Y + ENTRIES_PER_PAGE + ADDTL_ENTRIES, HORIZONTAL_LINE);
+
 
   if (copy_mode == false)
   {
-    screen_puts(0, 21,
+    cputsxy(0, 22,
                 CH_KEY_LEFT CH_KEY_DELETE "Up Dir" CH_KEY_N "ew" CH_KEY_F "ilter" CH_KEY_C "opy");
   }
   else
   {
-    screen_puts(0, 21,
+    cputsxy(0, 22,
                 CH_KEY_LEFT CH_KEY_DELETE "Up Dir" CH_KEY_N "ew" CH_KEY_F "ilter" CH_KEY_C "Do It!");
   }
-  screen_puts(0, 22,
+  cputsxy(0, 23,
               CH_KEY_RIGHT CH_KEY_RETURN "Choose" CH_KEY_OPTION "Boot" CH_KEY_ESC "Abort");
 }
 
 void screen_select_file_display(char *p, char *f)
 {
   unsigned char i;
+
+cputsxy(0, FILES_START_Y - 1, HORIZONTAL_LINE);
+cputsxy(0, FILES_START_Y + ENTRIES_PER_PAGE + ADDTL_ENTRIES, HORIZONTAL_LINE);
+
   // Host
-  screen_puts(0, 1, "Host:");
-  screen_puts(5, 1, selected_host_name);
+  cputsxy(0, 0, "Host:");
+  cputsxy(5, 0, selected_host_name);
 
   // Filter
-  screen_puts(0, 2, "Fltr:");
-  screen_puts(5, 2, f);
+  cputsxy(0, 1, "Fltr:");
+  cputsxy(5, 1, f);
 
   // Path - the path can wrap to line 4 (maybe 5?) so clear both to be safe.
+  screen_clear_line(2);
   screen_clear_line(3);
-  screen_clear_line(4);
-  screen_puts(0, 3, "Path:");
-  screen_puts(5, 3, p);
+  cputsxy(0, 2, "Path:");
+  cputsxy(5, 2, p);
 
   // Clear out the file area
-  for (i = FILES_START_Y; i < FILES_START_Y + ENTRIES_PER_PAGE; i++)
+  for (i = FILES_START_Y; i < FILES_START_Y + ENTRIES_PER_PAGE + ADDTL_ENTRIES; i++)
   {
     screen_clear_line(i);
   }
 
   // clear Prev/next page lines. Sometimes they're left on the screen during directory devance.
-  screen_clear_line(FILES_START_Y + ENTRIES_PER_PAGE);
-  screen_clear_line(FILES_START_Y - 1);
+//  screen_clear_line(FILES_START_Y + ENTRIES_PER_PAGE + ADDTL_ENTRIES);
+//  screen_clear_line(FILES_START_Y - 1);
 }
 
 void screen_select_file_display_long_filename(const char *e)
 {
-  screen_puts(0, 24, e);
+  cputsxy(0, 24, e);
 }
 
 void screen_select_file_clear_long_filename(void)
@@ -393,12 +326,11 @@ void screen_select_file_next(void)
 {
   if (dir_eof == false)
   {
-    screen_puts(0, FILES_START_Y + ENTRIES_PER_PAGE, CH_KEY_GT "Next Page");
+    cputsxy(37, FILES_START_Y - 1, ">>");
   }
   if (pos == 0)
   {
     // We're on the first page, clear the line with the "Previous Page" text.
-    screen_clear_line(FILES_START_Y - 1);
   }
 }
 
@@ -406,13 +338,13 @@ void screen_select_file_prev(void)
 {
   if (pos > 0)
   {
-    screen_puts(0, FILES_START_Y - 1, CH_KEY_LT "Previous Page");
+    cputsxy(1, FILES_START_Y - 1, "<<");
   }
 
   if (dir_eof == true)
   {
     // We're on the last page, clear the line with the "Next Page" text.
-    screen_clear_line(FILES_START_Y + ENTRIES_PER_PAGE);
+//    screen_clear_line(FILES_START_Y + ENTRIES_PER_PAGE + ADDTL_ENTRIES);
   }
 }
 
@@ -421,22 +353,22 @@ void screen_select_file_display_entry(unsigned char y, const char *e, unsigned)
 
 /*
   if (e[strlen(e)-1]=='/')
-    screen_puts(0,FILES_START_Y+y,CH_FOLDER);
+    cputsxy(0,FILES_START_Y+y,CH_FOLDER);
   else if (e[0]=='=')
-    screen_puts(0,FILES_START_Y+y,CH_SERVER);
+    cputsxy(0,FILES_START_Y+y,CH_SERVER);
   else
   */
 
   if (e[strlen(e)-1]=='/')
   {
-    screen_puts(0,FILES_START_Y+y,CH_FOLDER);
+    cputsxy(0,FILES_START_Y+y,CH_FOLDER);
   }
   else if (e[0]=='=')
   {
-    screen_puts(0,FILES_START_Y+y,CH_SERVER);
+    cputsxy(0,FILES_START_Y+y,CH_SERVER);
   }
 
-  screen_puts(3, FILES_START_Y + y, e);
+  cputsxy(3, FILES_START_Y + y, e);
 
 }
 
@@ -456,8 +388,8 @@ void screen_select_file_new_size(unsigned char)
   screen_clear_line(20);
   screen_clear_line(21);
 
-  screen_puts(0, 20, "Size?" CH_KEY_LABEL_L CH_INV_1 CH_KEY_LABEL_R "90K  " CH_KEY_LABEL_L CH_INV_2 CH_KEY_LABEL_R "130K  " CH_KEY_LABEL_L CH_INV_3 CH_KEY_LABEL_R "180K  " CH_KEY_LABEL_L CH_INV_4 CH_KEY_LABEL_R "360K  ");
-  screen_puts(5, 21,
+  cputsxy(0, 20, "Size?" CH_KEY_LABEL_L CH_INV_1 CH_KEY_LABEL_R "90K  " CH_KEY_LABEL_L CH_INV_2 CH_KEY_LABEL_R "130K  " CH_KEY_LABEL_L CH_INV_3 CH_KEY_LABEL_R "180K  " CH_KEY_LABEL_L CH_INV_4 CH_KEY_LABEL_R "360K  ");
+  cputsxy(5, 21,
               CH_KEY_LABEL_L CH_INV_5 CH_KEY_LABEL_R "720K " CH_KEY_LABEL_L CH_INV_6 CH_KEY_LABEL_R "1440K " CH_KEY_LABEL_L CH_INV_7 CH_KEY_LABEL_R "Custom ?");
 }
 
@@ -466,46 +398,46 @@ void screen_select_file_new_custom(void)
   screen_clear_line(20);
   screen_clear_line(21);
 
-  screen_puts(0, 20, "# Sectors?");
-  screen_puts(0, 21, "Sector Size (128/256/512)?");
+  cputsxy(0, 20, "# Sectors?");
+  cputsxy(0, 21, "Sector Size (128/256/512)?");
 }
 
 void screen_select_file_new_name(void)
 {
   screen_clear_line(20);
   screen_clear_line(21);
-  screen_puts(0, 20, "Enter name of new disk image file");
+  cputsxy(0, 20, "Enter name of new disk image file");
 }
 
 void screen_select_file_new_creating(void)
 {
   screen_clear();
-  screen_puts(3, 0, "Creating File");
+  cputsxy(3, 0, "Creating File");
 }
 
 void screen_clear_line(unsigned char y)
 {
-  set_cursor(0, y);          // move the cursor X position 0 and Y position.
-  memset(cursor_ptr, 0, 40); // fill the memory with spaces.  The zeros in the memory addresses are interpreted as spaces on the console
+cclearxy(0,y,40);
+//  set_cursor(0, y);          // move the cursor X position 0 and Y position.
+//  memset(cursor_ptr, 0, 40); // fill the memory with spaces.  The zeros in the memory addresses are interpreted as spaces on the console
 }
 
 void screen_error(const char *msg)
 {
   screen_clear_line(24);
-  screen_puts(0, 24, msg);
+  cputsxy(0, 24, msg);
 }
 
 void screen_hosts_and_devices(HostSlot *, DeviceSlot *, unsigned char *)
 {
-  screen_dlist_hosts_and_devices();
   set_active_screen(SCREEN_HOSTS_AND_DEVICES);
 
   screen_clear();
   bar_clear(false);
 
 
-  screen_puts(5, 0, "HOST LIST");
-  screen_puts(4, 11, "DRIVE SLOTS");
+  cputsxy(5, 0, "HOST LIST");
+  cputsxy(4, 11, "DRIVE SLOTS");
 
   screen_hosts_and_devices_host_slots(&hostSlots[0]);
 
@@ -514,8 +446,9 @@ void screen_hosts_and_devices(HostSlot *, DeviceSlot *, unsigned char *)
 
 void screen_clear()
 {
-  cursor_ptr = video_ptr;                       // Assign the current position of the cursor position address to the address of the video screen
-  memset(video_ptr, 0, GRAPHICS_0_SCREEN_SIZE); // Fill the memory address with blanks of the size of the screen; in this case Atari graphics mode 0 size.
+clrscr();
+  //cursor_ptr = video_ptr;                       // Assign the current position of the cursor position address to the address of the video screen
+  //memset(video_ptr, 0, GRAPHICS_0_SCREEN_SIZE); // Fill the memory address with blanks of the size of the screen; in this case Atari graphics mode 0 size.
 }
 
 // Show the keys that are applicable when we are on the Hosts portion of the screen.
@@ -523,9 +456,9 @@ void screen_hosts_and_devices_hosts(void)
 {
   screen_clear_line(22);
   screen_clear_line(23);
-  screen_puts(0, 22,
+  cputsxy(0, 22,
               CH_KEY_1TO8 "Slot" CH_KEY_LABEL_L CH_INV_E CH_KEY_LABEL_R "dit" CH_KEY_RETURN "Browse" CH_KEY_LABEL_L CH_INV_L CH_KEY_LABEL_R "obby");
-  screen_puts(2, 23,
+  cputsxy(2, 23,
               CH_KEY_LABEL_L CH_INV_C CH_KEY_LABEL_R "onfig" CH_KEY_TAB "Drive Slots" CH_KEY_OPTION "Boot");
 
   // bar_show(2);
@@ -539,11 +472,11 @@ void screen_hosts_and_devices_devices(void)
   screen_clear_line(23);
 
   screen_clear_line(11);
-  screen_puts(4, 11, "DRIVE SLOTS");
+  cputsxy(4, 11, "DRIVE SLOTS");
 
-  screen_puts(0, 22,
+  cputsxy(0, 22,
               CH_KEY_1TO8 "Slot" CH_KEY_LABEL_L CH_INV_E CH_KEY_LABEL_R "ject" CH_KEY_LABEL_L CH_INV_C CH_INV_L CH_INV_E CH_INV_A CH_INV_R CH_KEY_LABEL_R "All Slots" CH_KEY_LABEL_L CH_INV_L CH_KEY_LABEL_R "obby");
-  screen_puts(3, 23,
+  cputsxy(3, 23,
               CH_KEY_TAB "Hosts" CH_KEY_LABEL_L CH_INV_R CH_KEY_LABEL_R "ead " CH_KEY_LABEL_L CH_INV_W CH_KEY_LABEL_R "rite" CH_KEY_LABEL_L CH_INV_C CH_KEY_LABEL_R "onfig");
   bar_show(selected_device_slot + DEVICES_START_Y);
 }
@@ -554,11 +487,12 @@ void screen_hosts_and_devices_host_slots(HostSlot *)
 
   for (slotNum = 0; slotNum < NUM_HOST_SLOTS; slotNum++)
   {
-    set_cursor(2, slotNum + HOSTS_START_Y);
-    put_char(slotNum + '1');
-    cursor_ptr += 2;
+    gotoxy(2, slotNum + HOSTS_START_Y);
+    cputc(slotNum + '1');
+    gotoxy(5, slotNum + HOSTS_START_Y);
+    //cursor_ptr += 2;
 
-    screen_append((hostSlots[slotNum][0] != 0x00) ? (char *)hostSlots[slotNum] : text_empty);
+    cputs((hostSlots[slotNum][0] != 0x00) ? (char *)hostSlots[slotNum] : text_empty);
   }
 }
 
@@ -592,16 +526,17 @@ void screen_hosts_and_devices_device_slots(uint8_t y, DeviceSlot *, const bool *
       dinfo[3] = 0x20;
     }
 
-    screen_puts(0, slotNum + y, (char *) dinfo);
+    cputsxy(0, slotNum + y, (char *) dinfo);
 
-    screen_append(deviceSlots[slotNum].file[0] != 0x00 ? (char *)deviceSlots[slotNum].file : text_empty);
+    cputs(deviceSlots[slotNum].file[0] != 0x00 ? (char *)deviceSlots[slotNum].file : text_empty);
+    //screen_append(deviceSlots[slotNum].file[0] != 0x00 ? (char *)deviceSlots[slotNum].file : text_empty);
   }
 }
 
 void screen_hosts_and_devices_devices_clear_all(void)
 {
   screen_clear_line(11);
-  screen_puts(0, 11, "EJECTING ALL.. WAIT");
+  cputsxy(0, 11, "EJECTING ALL.. WAIT");
 }
 
 void screen_hosts_and_devices_clear_host_slot(unsigned char)
@@ -631,15 +566,16 @@ void screen_hosts_and_devices_eject(unsigned char ds)
   }
   bar_show(y + ds);
   screen_clear_line(y + ds);
-  screen_puts(2, y + ds, tmp);
-  screen_puts(5, y + ds, text_empty);
+  cputsxy(2, y + ds, tmp);
+  cputsxy(5, y + ds, text_empty);
 }
 
 void screen_hosts_and_devices_host_slot_empty(unsigned char)
 {
   // When this gets called it seems like the cursor is right where we want it to be.
   // so no need to move to a position first.
-  screen_append(text_empty);
+//screen_append(text_empty);
+cputs(text_empty);
 }
 
 void screen_hosts_and_devices_long_filename(const char *)
@@ -649,18 +585,18 @@ void screen_hosts_and_devices_long_filename(const char *)
 
 void screen_init(void)
 {
-  OS.noclik = 0xFF;
-  OS.shflok = 0;
-  OS.color0 = 0x9f;
-  OS.color1 = 0x0f;
-  OS.color2 = 0x90;
-  OS.color4 = 0x90;
-  OS.coldst = 1;
-  OS.sdmctl = 0; // Turn off screen
+  //OS.noclik = 0xFF;
+  //OS.shflok = 0;
+  //OS.color0 = 0x9f;
+  //OS.color1 = 0x0f;
+  //OS.color2 = 0x90;
+  //OS.color4 = 0x90;
+  //OS.coldst = 1;
+  //OS.sdmctl = 0; // Turn off screen
 
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist)); // copy display list to $0600
-  OS.sdlst = (void *)DISPLAY_LIST;                                   // and use it.
-  video_ptr = (unsigned char *)(DISPLAY_MEMORY);                     // assign the value of DISPLAY_MEMORY to video_ptr
+  //memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist)); // copy display list to $0600
+  //OS.sdlst = (void *)DISPLAY_LIST;                                   // and use it.
+  //video_ptr = (unsigned char *)(DISPLAY_MEMORY);                     // assign the value of DISPLAY_MEMORY to video_ptr
 
   font_init();
   bar_setup_regs();
@@ -673,13 +609,13 @@ void screen_init(void)
 void screen_destination_host_slot(char *h, char *p)
 {
   screen_clear();
-  screen_puts(0, 22,
+  cputsxy(0, 22,
               CH_KEY_1TO8 "Slot" CH_KEY_RETURN "Select" CH_KEY_ESC "Abort");
 
-  screen_puts(0, 18, h);
-  screen_puts(0, 19, p);
+  cputsxy(0, 18, h);
+  cputsxy(0, 19, p);
 
-  screen_puts(0, 0, "COPY TO HOST SLOT");
+  cputsxy(0, 0, "COPY TO HOST SLOT");
   bar_show(HOSTS_START_Y);
 }
 
@@ -693,84 +629,20 @@ void screen_perform_copy(char *, char *, char *, char *)
   // show_line_nums();
   screen_clear();
   bar_clear(false);
-  screen_puts(0, 0, "COPYING, PLEASE WAIT");
-}
-
-void screen_dlist_select_file(void)
-{
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist));
-  POKE(DISPLAY_LIST + 0x06, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x0f, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x10, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1b, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1c, DL_CHR40x8x1);
-}
-
-void screen_dlist_select_slot(void)
-{
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist));
-  POKE(DISPLAY_LIST + 0x06, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x0f, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x10, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1b, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1c, DL_CHR40x8x1);
-}
-
-void screen_dlist_show_info(void)
-{
-  // Start with original display list, then modify for this screen.
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist));
-
-  POKE(DISPLAY_LIST + 0x0a, DL_CHR20x8x2);
-  POKE(DISPLAY_LIST + 0x0b, DL_CHR20x8x2);
-  POKE(DISPLAY_LIST + 0x0f, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x10, DL_CHR40x8x1);
-}
-
-void screen_dlist_set_wifi(void)
-{
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist));
-  POKE(DISPLAY_LIST + 0x0a, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x0b, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1b, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1c, DL_CHR20x8x2);
-  POKE(DISPLAY_LIST + 0x1d, DL_CHR20x8x2);
-}
-
-void screen_dlist_mount_and_boot(void)
-{
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist));
-  screen_dlist_select_file();
+  cputsxy(0, 0, "COPYING, PLEASE WAIT");
 }
 
 void screen_connect_wifi(NetConfig *nc)
 {
-  screen_dlist_set_wifi();
   set_active_screen(SCREEN_CONNECT_WIFI);
   screen_clear();
   bar_clear(false);
 
-  screen_puts(0, 0, "WELCOME TO FUJINET! CONNECTING TO NET");
-  screen_puts(2, 3, nc->ssid);
+  cputsxy(0, 0, "WELCOME TO FUJINET! CONNECTING TO NET");
+  cputsxy(2, 3, nc->ssid);
   bar_show(3);
 }
 
-void screen_dlist_hosts_and_devices(void)
-{
-  // Screen Layout
-  // 2x20 column (host header)
-  // 8x40 column (host list)
-  // 2x20 column (drive slot header)
-  // rest 40 column (drive slots and commands)
-  memcpy((void *)DISPLAY_LIST, &config_dlist, sizeof(config_dlist));
-  POKE(DISPLAY_LIST + 0x06, DL_CHR20x8x2);
-  POKE(DISPLAY_LIST + 0x0f, DL_CHR20x8x2);
-  POKE(DISPLAY_LIST + 0x10, DL_CHR20x8x2);
-  POKE(DISPLAY_LIST + 0x0a, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x0b, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1b, DL_CHR40x8x1);
-  POKE(DISPLAY_LIST + 0x1c, DL_CHR40x8x1);
-}
 
 void screen_end(void)
 {
@@ -781,32 +653,32 @@ void screen_end(void)
 // Debugging function to show line #'s, used to test if the Y coordinate calculations are working.
 void show_line_nums(void)
 {
-  screen_puts(0, 0, "0");
-  screen_puts(0, 1, "1");
-  screen_puts(0, 2, "2");
-  screen_puts(0, 3, "3");
-  screen_puts(0, 4, "4");
-  screen_puts(0, 5, "5");
-  screen_puts(0, 6, "6");
-  screen_puts(0, 7, "7");
-  screen_puts(0, 8, "8");
-  screen_puts(0, 9, "9");
-  screen_puts(0, 10, "10");
-  screen_puts(0, 11, "11");
-  screen_puts(0, 12, "12");
-  screen_puts(0, 13, "13");
-  screen_puts(0, 14, "14");
-  screen_puts(0, 15, "15");
-  screen_puts(0, 16, "16");
-  screen_puts(0, 17, "17");
-  screen_puts(0, 18, "18");
-  screen_puts(0, 19, "19");
-  screen_puts(0, 20, "20");
-  screen_puts(0, 21, "21");
-  screen_puts(0, 22, "22");
-  screen_puts(0, 23, "23");
-  screen_puts(0, 24, "24");
-  screen_puts(0, 25, "25");
+  cputsxy(0, 0, "0");
+  cputsxy(0, 1, "1");
+  cputsxy(0, 2, "2");
+  cputsxy(0, 3, "3");
+  cputsxy(0, 4, "4");
+  cputsxy(0, 5, "5");
+  cputsxy(0, 6, "6");
+  cputsxy(0, 7, "7");
+  cputsxy(0, 8, "8");
+  cputsxy(0, 9, "9");
+  cputsxy(0, 10, "10");
+  cputsxy(0, 11, "11");
+  cputsxy(0, 12, "12");
+  cputsxy(0, 13, "13");
+  cputsxy(0, 14, "14");
+  cputsxy(0, 15, "15");
+  cputsxy(0, 16, "16");
+  cputsxy(0, 17, "17");
+  cputsxy(0, 18, "18");
+  cputsxy(0, 19, "19");
+  cputsxy(0, 20, "20");
+  cputsxy(0, 21, "21");
+  cputsxy(0, 22, "22");
+  cputsxy(0, 23, "23");
+  cputsxy(0, 24, "24");
+  cputsxy(0, 25, "25");
 
   while (!kbhit())
   {
@@ -818,7 +690,7 @@ void show_line_nums(void)
 void screen_debug(char *message)
 {
   screen_clear_line(24);
-  screen_puts(0, 24, message);
+  cputsxy(0, 24, message);
 }
 #endif //DEBUG
 #endif

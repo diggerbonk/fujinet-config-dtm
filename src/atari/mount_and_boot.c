@@ -13,7 +13,7 @@ void mount_and_boot_lobby(void)
     screen_mount_and_boot();
     set_active_screen(SCREEN_MOUNT_AND_BOOT);
     screen_clear();
-    screen_puts(3, 0, "Booting Lobby");
+    cputsxy(3, 0, "Booting Lobby");
 
     fuji_set_boot_mode(2);
     cold_start();
@@ -37,9 +37,9 @@ void mount_and_boot(void)
     }
 
     screen_clear();
-    screen_puts(3, 0, "MOUNT AND BOOT");
+    cputsxy(3, 0, "MOUNT AND BOOT");
 
-    screen_puts(0, 3, "Mounting all Host and Device Slots");
+    cputsxy(0, 3, "Mounting all Host and Device Slots");
 
     if (!fuji_mount_all())
     {
@@ -49,7 +49,7 @@ void mount_and_boot(void)
     }
     else
     {
-        screen_puts(9, 22, "SUCCESSFUL! BOOTING");
+        cputsxy(9, 22, "SUCCESSFUL! BOOTING");
         fuji_set_boot_config(0);
         cold_start();
     }

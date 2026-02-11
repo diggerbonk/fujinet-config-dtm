@@ -5,7 +5,8 @@
 #define DEVICES_END_Y   (DEVICES_START_Y + NUM_DEVICE_SLOTS - 1)
 
 // Y position of the start of the file list from host.
-#define FILES_START_Y   6
+#define FILES_START_Y  5
+#define ADDTL_ENTRIES 0
 
 // Y position on screen where the list of hosts starts.
 #define HOSTS_START_Y 2

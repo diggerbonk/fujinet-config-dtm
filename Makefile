@@ -1,5 +1,5 @@
 PRODUCT = config
-PLATFORMS = coco apple2 atari c64 adam
+PLATFORMS = atari
 
 # Not currently in buildable state
 #PLATFORMS += dragon

@@ -12,7 +12,7 @@
 #ifdef _CMOC_VERSION_
 #define ENTRIES_PER_PAGE 10
 #else /* ! _CMOC_VERSION_ */
-#define ENTRIES_PER_PAGE 15
+#define ENTRIES_PER_PAGE 16
 #endif /* CMOC_VERSION */
 
 #if defined(BUILD_COCO) || defined(BUILD_ADAM)  \

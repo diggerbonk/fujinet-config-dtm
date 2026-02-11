@@ -71,7 +71,6 @@ void input_select_slot_build_eos_directory_label(char *c);
 #define KCODE_RETURN 0x9B // is the ATASCI equivlant of 155 End Of Line (return)
 #define KCODE_BACKSP 0x7E
 
-#define CH_KEY_LABEL_L "\xD9" // Left arrow on the keyboard
 #endif
 
 #ifdef BUILD_PMD85
